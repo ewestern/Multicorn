@@ -98,6 +98,10 @@ static List *multicornImportForeignSchema(ImportForeignSchemaStmt * stmt,
 							 Oid serverOid);
 #endif
 
+#if PG_VERSION_NUM >= 90600
+static bool *multicornIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte)
+#endif
+
 static void multicorn_xact_callback(XactEvent event, void *arg);
 
 /*	Helpers functions */
@@ -169,6 +173,10 @@ multicorn_handler(PG_FUNCTION_ARGS)
 
 #if PG_VERSION_NUM >= 90500
 	fdw_routine->ImportForeignSchema = multicornImportForeignSchema;
+#endif
+
+#if PG_VERSION_NUM >= 90600
+  fdw_routine->IsForeignScanParallelSafe = multicornIsForeignScanParallelSafe;
 #endif
 
 	PG_RETURN_POINTER(fdw_routine);
@@ -887,6 +895,16 @@ multicorn_xact_callback(XactEvent event, void *arg)
 		errorCheck();
 	}
 }
+
+#if PG_VERSION_NUM >= 90600
+static bool
+  multicornIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte)
+{
+  return true;
+
+}
+
+#endif
 
 #if PG_VERSION_NUM >= 90500
 static List *
